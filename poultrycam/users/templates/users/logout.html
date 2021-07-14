@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block content %}
+
+<div class='container p-5' style='min-height: 75vh; max-width: 800px;'> 
+
+    <h5>Выйти из учетной записи?</h5>
+    <form method="post" action="{% url 'users:logout' %}">
+        {% csrf_token %}
+        <button class="btn btn-primary" type="submit" value="login">Выйти</button>
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+    
+</div>
+{% endblock %}

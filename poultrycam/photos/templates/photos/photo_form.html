@@ -1,0 +1,11 @@
+{% extends 'photos/home.html' %}
+{% block photo_form %}
+    <form method="post" class='d-flex justify-content-center py-3'>
+        {% csrf_token %}
+        {{ form.id.as_hidden }}
+        <button type="submit" name="Mark_as_good" value="GOOD" class="btn btn-success btn-lg mx-3 py-1" style="width: 200px;">Хорошо</button>
+        <button type="submit" name="Mark_as_bad" value="BAD" class="btn btn-danger btn-lg mx-3 py-1" style="width: 200px;">Плохо</button>
+        <button type="submit" name="Skip" value="SKIP" class="btn btn-secondary btn-lg mx-3 py-1" style="width: 200px;">Пропустить</button>
+    </form>
+{% endblock %}
+

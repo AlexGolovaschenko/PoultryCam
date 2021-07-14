@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block content %}
+
+<div class='container p-5' style='min-height: 75vh; max-width: 700px;'> 
+    {% if next %}
+        {% if user.is_authenticated %}
+        <h5>У Вас недостаточно прав для доступа к данной странице.</h5>
+        {% else %}
+        <h5>Войдите, чтоб получить доступ к данной странице.</h5>
+        {% endif %}
+    {% endif %}
+
+    <form method="post" action="{% url 'users:login' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_username">{{ form.username.label_tag }}</label>
+            {{ form.username|add_classes:'form-control' }}
+        </div>
+       <div class="form-group">
+            <label for="id_password">{{ form.password.label_tag }}</label>
+            {{ form.password|add_classes:'form-control' }}
+        </div>
+
+        <button class="btn btn-primary" type="submit" value="login">Войти</button>
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+
+    {% if form.errors %}
+    <p class='text-danger mt-3'>Имя пользователя или пароль указаны не верно. Попробуйте еще раз.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

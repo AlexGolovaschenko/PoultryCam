@@ -1,0 +1,15 @@
+
+:root {
+	/* sizes */
+	--width-base-content: 1300px;
+}
+
+
+
+/* --------------------------------------------------------------------------- */
+/* sizes */
+.base-content-width {
+	max-width: var(--width-base-content);
+}
+
+

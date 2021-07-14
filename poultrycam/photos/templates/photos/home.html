@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class='pt-3 pb-5'>
+    {% if photo %}
+        <div class='d-flex border-bottom mb-3 text-secondary'>
+            <h5 class=''> Фото {{photo.id}}: </h5>
+            <h5 class='pl-2'> {{photo.title}} </h5>
+            <span class="ml-auto"></span>
+            <span class="badge badge-primary m-1">Новых фото: {{photos_new}}</span>
+            <span class="badge badge-success m-1">Хороших: {{photos_marked_as_good}}</span>
+            <span class="badge badge-danger m-1">Плохих: {{photos_marked_as_bad}}</span>
+            <span class="badge badge-info m-1">Пропущено: {{photos_skiped}}</span>
+        </div>
+        <div class='container' style='min-height: 600px;'>
+            <img src="{{photo.img.url}}" alt="image" class="mx-auto d-block" style='max-height: 600px; max-width: 100%;'>
+        </div>
+
+        {% block photo_form %}
+            Form error 41
+        {% endblock %}
+
+    {% else %}
+        <h2 class='text-danger' style='margin-top: 100px; margin-bottom: 500px;'> Новых фотографий не обнаружено </h2>
+    {% endif %}
+</div>   
+{% endblock %}
