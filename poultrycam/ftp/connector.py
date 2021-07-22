@@ -1,11 +1,16 @@
 import pysftp
-import re
-from datetime import datetime
+import os 
 
-from django.utils.timezone import make_aware
+from django.core.files.base import ContentFile
+from django.conf import settings
+
 from photos.models import Photo, PhotoMetaData
 from poultrycam.settings import SFTP_HOSTNAME, SFTP_USERNAME, SFTP_PASSWORD
 
+from . import utils
+
+
+# -----------------------------------------------------------------------------
 class FtpConnector():
     def __init__(self):
         self.sftp = None
@@ -15,20 +20,13 @@ class FtpConnector():
             cnopts = pysftp.CnOpts()
             cnopts.hostkeys = None
             self.sftp = pysftp.Connection(SFTP_HOSTNAME, username=SFTP_USERNAME, password=SFTP_PASSWORD, cnopts=cnopts)
-        return self.sftp
-            
+        return self.sftp        
+
     def close(self):
         if self.sftp is not None:
             self.sftp.close()
             self.sftp = None
 
-    def update_photos_list(self, dir='.'):
-        self.connect()
-        files = self.scan_dir(dir)
-        photos_list = select_jpg(files)
-        self.relocate_photos(photos_list)
-        print('\n'.join(photos_list))
-        self.close()
 
     def scan_dir(self, dir='.', remove_empty_dirs=False):
         root = dir
@@ -39,7 +37,7 @@ class FtpConnector():
 
         #remove empty dirs
         if remove_empty_dirs and (not ld):
-            self.remove_empty_dir(dir)
+            self._remove_empty_dir(dir)
 
         for d in ld:
             next = '/'.join((root, d))
@@ -52,38 +50,8 @@ class FtpConnector():
                 pathes.append(next)
         return pathes
 
-    def remove_empty_dir(self, dir):
-        if self.sftp.isdir(dir):
-            print(f'empty dir removed {dir}')
-            self.sftp.rmdir(dir)
 
-    def relocate_photos(self, pathes):
-        for path in pathes:
-            # save photo to DB
-            self.save_new_photo(path)
-            # delete photo on ftp
-            print(f'file removed {path}')
-            self.sftp.remove(path)
-
-    def save_new_photo(self, path, remove=False):
-        try:
-            with self.sftp.open(path, mode='r', bufsize=0) as f:
-                photo = Photo.objects.create(img='', title='image')
-                PhotoMetaData.objects.create(
-                    photo       = photo, 
-                    cam_name    = parse_cam_name_from_path(path),
-                    cam_id      = parse_cam_id_from_path(path),
-                    upload_data = parse_date_from_path(path),
-                    ftp_path    = path,
-                    )
-                photo.img.save('image.jpg', f, save=True)
-            return photo
-        except FileNotFoundError:
-            # do your FileNotFoundError code here
-            print('Error: FileNotFoundError')
-            return None
-
-    def open_file(self, path):
+    def get_file_data(self, path):
         self.connect()
         try:
             with self.sftp.open(path, mode='r', bufsize=0) as f:
@@ -91,43 +59,84 @@ class FtpConnector():
                 self.close()
                 return data
         except FileNotFoundError:
-            # do your FileNotFoundError code here
             print('Error: FileNotFoundError')
             self.close()
             return None
 
-# ----------------------------------------------------------------------------------------------
-# Utils
+    def move_file(self, source_path, dest_path):
+        self.connect()
+        self.sftp.rename(source_path, dest_path)
 
-def select_jpg(files):
-    return [f for f in files if re.search(r'.jpg$', f)]
+    def remove_file(self, path):
+        self.connect()
+        if path:
+            self.sftp.remove(path)
+
+    def _remove_empty_dir(self, dir):
+        if self.sftp.isdir(dir):
+            print(f'empty dir removed {dir}')
+            self.sftp.rmdir(dir)
+
+
+ 
+
+# -----------------------------------------------------------------------------
+class FtpPhotosStorageConnector():
+    def __init__(self):
+        self.ftp = FtpConnector()
+
+
+    def update_photos_list(self, dir='.'):
+        self.ftp.connect()
+        files = self.ftp.scan_dir(dir)
+        photos_list = utils.select_jpg(files)
+        self._relocate_photos_list_and_save_to_DB(photos_list)
+        print('\n'.join(photos_list))
+        self.ftp.close()
+
+
+    def relocate_photo(self, photo, dir):
+        source_path = os.path.normpath( photo.img.url.replace('/ftp-media/', '') ) # fix the problem with pathes on Windows
+        source_path = os.path.join(settings.SFTP_STORAGE_ROOT, source_path)
+        dest_path = source_path.replace('new', dir)
+        self.ftp.move_file(source_path, dest_path)
+        photo.img.name = dest_path.replace(settings.SFTP_STORAGE_ROOT, '')
+        photo.save()
+
+
+    def _relocate_photos_list_and_save_to_DB(self, pathes):
+        for path in pathes:
+            # save photo to DB
+            self._save_photo_to_DB(path)
+            # delete photo on ftp
+            print(f'file removed {path}')
+            self.ftp.remove_file(path)
+
+
+    def _save_photo_to_DB(self, path, remove=False):
+        try:
+            file_data = self.ftp.get_file_data(path)
+            cam_name    = utils.parse_cam_name_from_path(path)
+            cam_id      = utils.parse_cam_id_from_path(path)
+            upload_data = utils.parse_date_from_path(path)
+            upload_data_clear = utils.clear_upload_data(upload_data)
+            photo_name = f'{cam_name}_{cam_id}_{upload_data_clear}'
+            photo = Photo.objects.create(img='', title=f'{photo_name}.jpg')
+            PhotoMetaData.objects.create(
+                photo       = photo, 
+                cam_name    = cam_name,
+                cam_id      = cam_id,
+                upload_data = upload_data,
+                ftp_path    = path,
+                )
+            uploaded_file = ContentFile(file_data)
+            uploaded_file.name = f'{photo_name}.jpg'
+            photo.img.save(f'{photo_name}.jpg', uploaded_file, save=True)
+            return photo
+        except FileNotFoundError:
+            print('Error: FileNotFoundError')
+            return None
 
 
 
-# string example:
-# inbox/cam1/6M07E3EPAGC7C0F/2021-05-28/001/jpg/09/30.20[R][0@0][0].jpg
-def parse_date_from_path(path):
-    results = re.search(r'inbox/cam\d+/\w+/(\d\d\d\d-\d\d-\d\d)/001/jpg/(\d\d)/(\d\d).(\d\d)\[R\]\[0@0\]\[0\].jpg$', path)
-    if results:
-        str_date = results.group(1)
-        str_hours = results.group(2)
-        str_minutes = results.group(3)
-        str_seconds = results.group(4)
-        dt = datetime.strptime(' '.join((str_date, str_hours, str_minutes, str_seconds)),  r'%Y-%m-%d %H %M %S')
-        return make_aware(dt)
-    else:
-        return None
 
-def parse_cam_id_from_path(path):
-    results = re.search(r'inbox/cam\d+/(\w+)/', path)
-    if results:
-        return results.group(1)
-    else:
-        return None
-
-def parse_cam_name_from_path(path):
-    results = re.search(r'inbox/(cam\d+)/', path)
-    if results:
-        return results.group(1)
-    else:
-        return None

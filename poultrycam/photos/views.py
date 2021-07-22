@@ -1,15 +1,36 @@
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.views import View
+from django.views.generic import ListView
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from ftp.connector import FtpConnector
+from ftp.connector import FtpPhotosStorageConnector
 from .models import Photo, MARKER_NEW, MARKER_GOOD, MARKER_BAD, MARKER_SKIP
 from .forms import PhotoMarkersForm
 
 
+ftp = FtpPhotosStorageConnector()
 
-# Create your views here.
+def update_photos_list():
+    ftp.update_photos_list('inbox')
+
+def relocate_photo(photo, dir):
+    if not dir:
+        return
+    ftp.relocate_photo(photo, dir)
+    
+
+def get_photos_statistic():
+    statistic = {}
+    statistic['photos_total'] = Photo.objects.all().count()
+    statistic['photos_new'] = Photo.objects.filter(marker=MARKER_NEW).count()
+    statistic['photos_marked_as_good'] = Photo.objects.filter(marker=MARKER_GOOD).count()
+    statistic['photos_marked_as_bad'] = Photo.objects.filter(marker=MARKER_BAD).count()
+    statistic['photos_skiped'] = Photo.objects.filter(marker=MARKER_SKIP).count()
+    return statistic
+
+
 class HomePageView(LoginRequiredMixin, FormView):
     template_name = 'photos/photo_form.html'
     form_class = PhotoMarkersForm
@@ -20,12 +41,15 @@ class HomePageView(LoginRequiredMixin, FormView):
         if form.data.get('Mark_as_good', None):
             photo.marker = MARKER_GOOD
             photo.save()
+            relocate_photo(photo, 'good')
         elif form.data.get('Mark_as_bad', None):
             photo.marker = MARKER_BAD
             photo.save()
+            relocate_photo(photo, 'bad')
         elif form.data.get('Skip', None):
             photo.marker = MARKER_SKIP
             photo.save()
+            relocate_photo(photo, 'skiped')
         else:
             raise Exception(f'Invalide marker for photo')
         return super().form_valid(form)
@@ -35,21 +59,41 @@ class HomePageView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        self.update_photos_list()
+        update_photos_list()
         photo = Photo.objects.filter(marker=MARKER_NEW).first()
-        context['photo'] = photo
-        context['form'] = PhotoMarkersForm(initial={'id': photo.id, })
-        context['photos_total'] = Photo.objects.all().count()
-        context['photos_new'] = Photo.objects.filter(marker=MARKER_NEW).count()
-        context['photos_marked_as_good'] = Photo.objects.filter(marker=MARKER_GOOD).count()
-        context['photos_marked_as_bad'] = Photo.objects.filter(marker=MARKER_BAD).count()
-        context['photos_skiped'] = Photo.objects.filter(marker=MARKER_SKIP).count()
+        if photo:
+            context['photo'] = photo
+            context['form'] = PhotoMarkersForm(initial={'id': photo.id, })
+        context['stat'] = get_photos_statistic()
         return context
 
-    def update_photos_list(self):
-        ftp = FtpConnector()
-        ftp.update_photos_list('inbox')
+
+
+class PhotoListView(LoginRequiredMixin, ListView):
+    model = Photo
+    paginate_by = 12
+    template_name = 'photos/photos_list.html'
+    login_url = 'users:login'
+    mark = None
+
+    def get_queryset(self):
+        return Photo.objects.filter(marker=self.mark).order_by('id')
+
+    def get_context_data(self, **kwargs):
+        context = super(PhotoListView, self).get_context_data(**kwargs)
+        context['stat'] = get_photos_statistic()
+        context['title'] = mark_to_text(self.mark)
+        return context
 
 
 
+def mark_to_text(mark):
+    if mark == MARKER_NEW:
+        return 'Новые фотографии'
+    elif mark == MARKER_GOOD:
+        return 'Хорошие фотографии'
+    if mark == MARKER_BAD:
+        return 'Плохие фотографии'
+    elif mark == MARKER_SKIP:
+        return 'Пропущенные фотографии'
 

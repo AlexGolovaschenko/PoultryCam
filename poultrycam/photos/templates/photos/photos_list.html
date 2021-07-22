@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style='min-height: 700px;'>
+<div class='pt-3 pb-5'>
+
+    {% include "photos/galery_navbar.html" with stat=stat title=title only %}  
+
+    <div class='row'>
+        {% for photo in object_list %}
+
+            <div class="col-3">
+            <div class="card p-2 my-3">
+                <a class='' style="cursor: zoom-in;" href="{{photo.img.url}}" target="_blank">
+                    <img src="{{photo.img.url}}?width=240" alt="image" class="mx-auto d-block m-2" style='width: 240px; max-height: 300px'>
+                    <div class='text-info small'>
+                        <span class=''> Фото {{photo.id}}: {{photo.title}} </span>
+                    </div>
+                </a>
+                <div class='text-dark small'>
+                    <span class='float-right'> {{photo.upload_date}} </span>
+                </div>
+            </div>
+            </div>
+
+        {% empty %}
+            <h4 class="mt-5 text-info mx-auto"> Фотографии отсутствуют </h4>
+            <i class='far fa-image text-info text-center w-100' style='font-size:100px;'></i>
+        {% endfor %}
+    </div> 
+
+    {% if is_paginated %}
+        <ul class="pagination justify-content-center mt-4">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">&laquo; первая</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">предыдущая</a></li>
+            {% endif %}
+
+            <span class="current">
+                <li class="page-item disabled">
+                    <span class="page-link">страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                </li>
+            </span>
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">следующая</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">последняя &raquo;</a></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+    
+</div>
+</div>   
+
+{% endblock %}

@@ -1,0 +1,22 @@
+
+
+{% load static %}
+
+<div class='d-flex border-bottom mb-3 text-secondary'>
+    {% if photo %}
+        <h5 class='py-1'> Фото {{photo.id}}: <span class='font-weight-normal'>{{photo.title}}</span> </h5>
+    {% endif %}
+
+    {% if title %}
+        <h5 class='py-1'> {{title}} </h5>
+    {% endif %}
+
+    <span class="ml-auto"></span>
+    <a class="badge badge-secondary m-1 p-2" style='width:38px; height:32px;' href="{% url 'photos:home' %}">
+        <i class='fas fa-home' style='font-size:15px;'></i>
+    </a>
+    <a class="badge badge-primary m-1 p-2" href="{% url 'photos:new' %}">Новых фото: {{stat.photos_new}}</a>
+    <a class="badge badge-success m-1 p-2" href="{% url 'photos:good' %}">Хороших: {{stat.photos_marked_as_good}}</a>
+    <a class="badge badge-danger m-1 p-2" href="{% url 'photos:bad' %}">Плохих: {{stat.photos_marked_as_bad}}</a>
+    <a class="badge badge-info m-1 p-2" href="{% url 'photos:skiped' %}">Пропущено: {{stat.photos_skiped}}</a>
+</div>
