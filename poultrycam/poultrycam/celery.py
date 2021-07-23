@@ -21,16 +21,9 @@ app.autodiscover_tasks()
 
 
 app.conf.beat_schedule = {
-    'update-photo-list-every-1-hour': {         # name of the scheduler
-        'task'      : 'update_photos_list',     # task name which we have created in tasks.py
-        'schedule'  : timedelta(hours=1),       # set the period of running
-        # 'args'    : (16, 16)                  # set the args 
-    },
-
-    'print2-every-5-seconds': {                 # name of the scheduler
-        'task'      : 'print2',                 # task name which we have created in tasks.py
-        'schedule'  : timedelta(seconds=5),     # set the period of running
-        'args'      : ('hello', )
+    'update-photo-list-every-30-minutes': {         # name of the scheduler
+        'task'      : 'update_photos_list',         # task name which we have created in tasks.py
+        'schedule'  : timedelta(minutes=30),        # set the period of running
     },
 }
 

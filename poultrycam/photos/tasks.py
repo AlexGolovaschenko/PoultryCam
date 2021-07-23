@@ -20,9 +20,3 @@ def update_photos_list():
     logger.info('Photo list updated')
 
 
-
-@shared_task(name = "print2")
-def print2(a):
-    logger.info('Photo list updating end %s' %(a))
-
-
