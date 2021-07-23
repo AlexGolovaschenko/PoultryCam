@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import contacts
+from .views import contacts, documentation
 from ftp.views import ftp_media_view
 
 urlpatterns = [
@@ -25,6 +25,7 @@ urlpatterns = [
     path('owen-admin/', admin.site.urls),
     path('user/', include('users.urls')),
     path('contacts/', contacts, name='contacts'),
+    path('docs/', documentation, name='docs'),
     path('ftp-media/<path:path>/', ftp_media_view),
 ]   
 
