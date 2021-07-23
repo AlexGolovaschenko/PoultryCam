@@ -9,9 +9,9 @@ from .models import Photo, MARKER_NEW, MARKER_GOOD, MARKER_BAD, MARKER_SKIP
 from .forms import PhotoMarkersForm
 
 
+ftp = FtpPhotosStorageConnector()
 
 def relocate_photo(photo, dir):
-    ftp = FtpPhotosStorageConnector()
     if not dir:
         return
     ftp.relocate_photo(photo, dir)

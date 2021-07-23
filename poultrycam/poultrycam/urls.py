@@ -22,7 +22,7 @@ from ftp.views import ftp_media_view
 
 urlpatterns = [
     path('', include('photos.urls')),
-    path('admin/', admin.site.urls),
+    path('owen-admin/', admin.site.urls),
     path('user/', include('users.urls')),
     path('contacts/', contacts, name='contacts'),
     path('ftp-media/<path:path>/', ftp_media_view),
