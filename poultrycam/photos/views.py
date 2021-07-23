@@ -1,6 +1,5 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views import View
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,12 +9,9 @@ from .models import Photo, MARKER_NEW, MARKER_GOOD, MARKER_BAD, MARKER_SKIP
 from .forms import PhotoMarkersForm
 
 
-ftp = FtpPhotosStorageConnector()
-
-def update_photos_list():
-    ftp.update_photos_list('inbox')
 
 def relocate_photo(photo, dir):
+    ftp = FtpPhotosStorageConnector()
     if not dir:
         return
     ftp.relocate_photo(photo, dir)
@@ -59,7 +55,6 @@ class HomePageView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        update_photos_list()
         photo = Photo.objects.filter(marker=MARKER_NEW).first()
         if photo:
             context['photo'] = photo

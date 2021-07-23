@@ -9,6 +9,12 @@ OwenCloud API.pdf
 _notes/
 
 
+# celery
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+
+
 _design_parts/
 _docs/
 _notes/

@@ -85,6 +85,8 @@ class FtpPhotosStorageConnector():
     def __init__(self):
         self.ftp = FtpConnector()
 
+    def close(self):
+        self.ftp.close()
 
     def update_photos_list(self, dir='.'):
         self.ftp.connect()
