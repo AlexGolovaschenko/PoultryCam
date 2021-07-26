@@ -20,3 +20,7 @@ def update_photos_list():
     logger.info('Photo list updated')
 
 
+@shared_task(name = "print_hello")
+def print_hello():
+    logger.info('Hello')
+

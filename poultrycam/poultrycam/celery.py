@@ -25,6 +25,12 @@ app.conf.beat_schedule = {
         'task'      : 'update_photos_list',         # task name which we have created in tasks.py
         'schedule'  : timedelta(minutes=30),        # set the period of running
     },
+
+    'print-hello-every-10-seconds': {        
+        'task'      : 'print_hello',        
+        'schedule'  : timedelta(seconds=10),       
+    },
+
 }
 
 
