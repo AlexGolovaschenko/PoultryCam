@@ -1,7 +1,7 @@
 import pysftp
 import os 
+import io
 
-from django.core.files.base import ContentFile
 from django.conf import settings
 
 from photos.models import Photo, PhotoMetaData
@@ -115,7 +115,7 @@ class FtpPhotosStorageConnector():
             self.ftp.remove_file(path)
 
 
-    def _save_photo_to_DB(self, path, remove=False):
+    def _save_photo_to_DB(self, path):
         try:
             file_data = self.ftp.get_file_data(path)
             cam_name    = utils.parse_cam_name_from_path(path)
@@ -131,7 +131,7 @@ class FtpPhotosStorageConnector():
                 upload_data = upload_data,
                 ftp_path    = path,
                 )
-            uploaded_file = ContentFile(file_data)
+            uploaded_file = io.BytesIO(file_data)
             uploaded_file.name = f'{photo_name}.jpg'
             photo.img.save(f'{photo_name}.jpg', uploaded_file, save=True)
             return photo

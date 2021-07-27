@@ -1,8 +1,5 @@
 from django.db import models
-
-from storages.backends.sftpstorage import SFTPStorage
-SFS = SFTPStorage(base_url='/ftp-media/')
-
+from datetime import date
 
 MARKER_NEW = 'NEW'
 MARKER_GOOD = 'GOOD'
@@ -24,13 +21,18 @@ BAD_MARKER_DETAIL_CHOICES = [
 
 
 def photo_upload_path(instance, filename):
-    return 'new/{1}'.format(instance, filename)
+    try:
+        pmeta = PhotoMetaData.objects.get(photo =instance)
+        cam_name = pmeta.cam_name
+    except:
+        cam_name = 'cam'
+    return 'photos/{2}/{0}/{1}'.format(cam_name, filename, date.today().strftime("%Y/%m/%d"))
 
 
 class Photo(models.Model):
     title = models.CharField(verbose_name='Имя файла', max_length=100)
     upload_date = models.DateTimeField(verbose_name='Дата добавления', auto_now=False, auto_now_add=True)
-    img = models.ImageField(upload_to=photo_upload_path, default='default.png', storage=SFS)
+    img = models.ImageField(upload_to=photo_upload_path, default='default.png')
 
     marker = models.CharField(verbose_name='Метка', max_length=50, choices=MARKER_CHOICES, default=MARKER_NEW)
     bad_marker_detail = models.CharField(verbose_name='Уточнение плохой метки', max_length=50, choices=BAD_MARKER_DETAIL_CHOICES, blank=True)

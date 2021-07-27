@@ -18,7 +18,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from .views import contacts, documentation
-from ftp.views import ftp_media_view
+from ftp.views import ftp_media_view, local_media_view
 
 urlpatterns = [
     path('', include('photos.urls')),
@@ -26,6 +26,7 @@ urlpatterns = [
     path('user/', include('users.urls')),
     path('contacts/', contacts, name='contacts'),
     path('docs/', documentation, name='docs'),
+    path('media/<path:path>/', local_media_view),
     path('ftp-media/<path:path>/', ftp_media_view),
 ]   
 

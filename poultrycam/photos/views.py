@@ -4,27 +4,8 @@ from django.views.generic import ListView
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from ftp.connector import FtpPhotosStorageConnector
 from .models import Photo, MARKER_NEW, MARKER_GOOD, MARKER_BAD, MARKER_SKIP
 from .forms import PhotoMarkersForm
-
-
-ftp = FtpPhotosStorageConnector()
-
-def relocate_photo(photo, dir):
-    if not dir:
-        return
-    ftp.relocate_photo(photo, dir)
-    
-
-def get_photos_statistic():
-    statistic = {}
-    statistic['photos_total'] = Photo.objects.all().count()
-    statistic['photos_new'] = Photo.objects.filter(marker=MARKER_NEW).count()
-    statistic['photos_marked_as_good'] = Photo.objects.filter(marker=MARKER_GOOD).count()
-    statistic['photos_marked_as_bad'] = Photo.objects.filter(marker=MARKER_BAD).count()
-    statistic['photos_skiped'] = Photo.objects.filter(marker=MARKER_SKIP).count()
-    return statistic
 
 
 class HomePageView(LoginRequiredMixin, FormView):
@@ -37,15 +18,12 @@ class HomePageView(LoginRequiredMixin, FormView):
         if form.data.get('Mark_as_good', None):
             photo.marker = MARKER_GOOD
             photo.save()
-            relocate_photo(photo, 'good')
         elif form.data.get('Mark_as_bad', None):
             photo.marker = MARKER_BAD
             photo.save()
-            relocate_photo(photo, 'bad')
         elif form.data.get('Skip', None):
             photo.marker = MARKER_SKIP
             photo.save()
-            relocate_photo(photo, 'skiped')
         else:
             raise Exception(f'Invalide marker for photo')
         return super().form_valid(form)
@@ -80,6 +58,17 @@ class PhotoListView(LoginRequiredMixin, ListView):
         context['title'] = mark_to_text(self.mark)
         return context
 
+
+
+
+def get_photos_statistic():
+    statistic = {}
+    statistic['photos_total'] = Photo.objects.all().count()
+    statistic['photos_new'] = Photo.objects.filter(marker=MARKER_NEW).count()
+    statistic['photos_marked_as_good'] = Photo.objects.filter(marker=MARKER_GOOD).count()
+    statistic['photos_marked_as_bad'] = Photo.objects.filter(marker=MARKER_BAD).count()
+    statistic['photos_skiped'] = Photo.objects.filter(marker=MARKER_SKIP).count()
+    return statistic
 
 
 def mark_to_text(mark):
