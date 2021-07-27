@@ -9,6 +9,8 @@ from poultrycam.settings import MEDIA_ROOT
 
 from .connector import FtpConnector
 
+
+
 def ftp_media_view(request, path):
     path = os.path.normpath(path) # fix the problem with pathes on Windows
     ftp = FtpConnector()
@@ -38,13 +40,15 @@ def ftp_media_view(request, path):
 
 
 def local_media_view(request, path):
+    print('local_media_view')
     # open image
-    with open(MEDIA_ROOT + path, "r") as file:
+    with open(os.path.join(MEDIA_ROOT, path), "rb") as file:
         f = file.read()
 
     # resizing image
     img_width = request.GET.get('width', None)
     img_height = request.GET.get('height', None)
+    print(img_width)
     if img_width or img_height:
         image_file = io.BytesIO(f)
         with Image.open(image_file) as image:

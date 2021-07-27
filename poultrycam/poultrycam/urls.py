@@ -26,7 +26,7 @@ urlpatterns = [
     path('user/', include('users.urls')),
     path('contacts/', contacts, name='contacts'),
     path('docs/', documentation, name='docs'),
-    path('media/<path:path>/', local_media_view),
+    path('s-media/<path:path>/', local_media_view),
     path('ftp-media/<path:path>/', ftp_media_view),
 ]   
 
