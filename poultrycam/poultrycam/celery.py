@@ -23,7 +23,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'update-photo-list-every-30-minutes': {         # name of the scheduler
         'task'      : 'update_photos_list',         # task name which we have created in tasks.py
-        'schedule'  : timedelta(minutes=5),        # set the period of running
+        'schedule'  : timedelta(minutes=30),        # set the period of running
     },
 }
 
